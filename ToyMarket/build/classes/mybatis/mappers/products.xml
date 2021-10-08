@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="products">
+
+	<select id="getTotalRows" parameterType="map" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			toy_products
+	</select>
+
+	<!-- ======================================맵으로 select ===================================== -->
+	<select id="getProductsBySearchType" parameterType="map" resultType="com.toymarket.vo.Products">
+		SELECT 
+			product_no 					as no,
+			category_no 				as categoryNo,
+			product_brand 				as brand,
+			product_name 				as name,
+			product_price 				as price,
+			product_discount_rate 		as discountRate,
+			product_discount_YN 		as discountYN,
+			product_like_count 			as likeCount,
+			product_sell_unit 			as sellUnit,
+			product_weight 				as weight,
+			product_morning_delivery_YN as morningDeliveryYN,
+			product_description 		as description,
+			product_stock 				as stock,
+			product_created_date 		as createdDate,
+			product_status 				as status,
+			product_image 				as image,
+			product_sub_title 			as subTitle
+		FROM 
+			TOY_PRODUCTS TP 			
+		<choose>
+			<when test="searchCategory != null">
+				where category_no = #{searchCategory}
+			</when>
+			<when test="searchWord != null">
+				where product_name like '%'||#{searchWord}||'%'
+			</when>
+		</choose>
+	</select>
+
+	<select id="getDiscountedProducts" resultType="com.toymarket.vo.Products">
+		SELECT 
+			product_no 					as no,
+			category_no 				as categoryNo,
+			product_brand 				as brand,
+			product_name 				as name,
+			product_price 				as price,
+			product_discount_rate 		as discountRate,
+			product_discount_YN 		as discountYN,
+			product_like_count 			as likeCount,
+			product_sell_unit 			as sellUnit,
+			product_weight 				as weight,
+			product_morning_delivery_YN as morningDeliveryYN,
+			product_description 		as description,
+			product_stock 				as stock,
+			product_created_date 		as createdDate,
+			product_status 				as status,
+			product_image 				as image,
+			product_sub_title 			as subTitle
+		FROM 
+			TOY_PRODUCTS TP 
+		WHERE 
+			TP.PRODUCT_DISCOUNT_YN='y' or TP.PRODUCT_DISCOUNT_YN='Y'
+		ORDER BY 
+			TP.PRODUCT_DISCOUNT_RATE DESC
+	</select>
+	
+	<select id="getTotalRowsWithSearching" parameterType="map" resultType="int">
+		select
+			count(*)
+		from
+			toy_products
+		
+		<where>
+			 <choose>
+		 		<when test="opt != null and opt == 'name'">
+		 			product_name like '%' || #{keyword} || '%'
+		 		</when>
+		 		<when test="opt != null and opt == 'brand'">
+		 			and product_ brand like '%' || #{keyword} || '%'
+		 		</when>
+		 	</choose>
+		 </where>
+
+	</select>
+
+	<select id="getAllProducts2" resultType="com.toymarket.vo.Products">
+		SELECT 
+			product_no 					as no,
+			category_no 				as categoryNo,
+			product_brand 				as brand,
+			product_name 				as name,
+			product_price 				as price,
+			product_discount_rate 		as discountRate,
+			product_discount_YN 		as discountYN,
+			product_like_count 			as likeCount,
+			product_sell_unit 			as sellUnit,
+			product_weight 				as weight,
+			product_morning_delivery_YN as morningDeliveryYN,
+			product_description 		as description,
+			product_stock 				as stock,
+			product_created_date 		as createdDate,
+			product_status 				as status,
+			product_image 				as image,
+			product_sub_title 			as subTitle
+		FROM 
+			toy_products
+	</select>
+	<select id="getAllProducts"  parameterType="map" resultType="com.toymarket.vo.Products">
+		SELECT 
+			product_no 					as no,
+			category_no 				as categoryNo,
+			product_brand 				as brand,
+			product_name 				as name,
+			product_price 				as price,
+			product_discount_rate 		as discountRate,
+			product_discount_YN 		as discountYN,
+			product_like_count 			as likeCount,
+			product_sell_unit 			as sellUnit,
+			product_weight 				as weight,
+			product_morning_delivery_YN as morningDeliveryYN,
+			product_description 		as description,
+			product_stock 				as stock,
+			product_created_date 		as createdDate,
+			product_status 				as status,
+			product_image 				as image,
+			product_sub_title 			as subTitle
+		FROM (
+			SELECT
+				<if test="sort == '신상품순'"> row_number() OVER (ORDER BY product_no DESC) rn,</if>
+				<if test="sort == '인기상품순'"> row_number() OVER (ORDER BY product_like_count DESC) rn,</if>
+				<if test="sort == '혜택순'"> row_number() OVER (ORDER BY product_discount_rate DESC) rn,</if>
+				<if test="sort == '낮은가격순'"> row_number() OVER (ORDER BY product_price ASC) rn,</if>
+				<if test="sort == '높은가격순'"> row_number() OVER (ORDER BY product_price DESC) rn,</if>
+				product_no, category_no, product_brand, product_name, product_price, product_discount_rate, product_discount_YN,
+				product_like_count, product_sell_unit, product_weight, product_morning_delivery_YN, product_description,
+				product_stock, product_created_date, product_status, product_image, product_sub_title
+			FROM toy_products
+		
+		)
+		WHERE
+			rn BETWEEN #{beginIndex} AND #{endIndex}	
+	</select>
+	<select id="getAllProductsWithCategory" parameterType="int" resultType="com.toymarket.dto.ProductWithCategoryDto">
+		SELECT 
+			P.product_no 					as no,
+			P.category_no 					as categoryNo,
+			C.category_name					as categoryName,
+			P.product_brand 				as brand,
+			P.product_name 					as name,
+			P.product_price 				as price,
+			P.product_discount_rate 		as discountRate,
+			P.product_discount_YN 			as discountYN,
+			P.product_like_count 			as likeCount,
+			P.product_sell_unit 			as sellUnit,
+			P.product_weight 				as weight,
+			P.product_morning_delivery_YN 	as morningDeliveryYN,
+			P.product_description 			as description,
+			P.product_stock 				as stock,
+			P.product_created_date 			as createdDate,
+			P.product_status 				as status,
+			P.product_image 				as image,
+			P.product_sub_title 			as subTitle
+		FROM 
+			toy_products P, toy_categories C
+		where
+			p.category_no = c.category_no
+			and	product_no = #{value}
+	</select>
+	
+	<select id="getAllProductsList" parameterType="map" resultType="com.toymarket.vo.Products">
+		SELECT 
+			product_no 						as no,
+			category_no 					as categoryNo,
+			product_brand 					as brand,
+			product_name 					as name,
+			product_price 					as price,
+			product_discount_rate 			as discountRate,
+			product_discount_YN 			as discountYN,
+			product_like_count 				as likeCount,
+			product_sell_unit 				as sellUnit,
+			product_weight 					as weight,
+			product_morning_delivery_YN 	as morningDeliveryYN,
+			product_description 			as description,
+			product_stock 					as stock,
+			product_created_date 			as createdDate,
+			product_status 					as status,
+			product_image 					as image,
+			product_sub_title 				as subTitle
+		FROM (
+			select
+				<if test="sort == '상품번호'">row_number() over (order by product_no asc) rn,</if>
+				<if test="sort == '상품명'">row_number() over (order by product_name asc) rn,</if>
+				<if test="sort == '제조사'">row_number() over (order by product_brand asc) rn,</if>
+				<if test="sort == '최근등록상품순'">row_number() over (order by product_no desc) rn,</if>
+				product_no, category_no, product_brand, product_name, product_price, product_discount_rate, product_discount_YN, product_like_count,
+				product_sell_unit, product_weight, product_morning_delivery_YN, product_description, product_stock, product_created_date, product_status,
+				product_image, product_sub_title
+			from 
+			
+				toy_products
+				<where>
+					<choose>
+		 				<when test="opt != null and opt == 'name'">
+		 						product_name like '%' || #{keyword} || '%'
+		 				</when>
+		 				<when test="opt != null and opt == 'brand'">
+		 					and product_ brand like '%' || #{keyword} || '%'
+		 				</when>
+		 			</choose>
+		 			<if test="catNo != null">
+		 				and category_no = #{catNo}
+		 			</if>
+		 			
+		 		</where>
+		)
+		where 
+			rn between #{beginIndex} and #{endIndex}
+	</select>
+	
+	<delete id="deleteById" parameterType="int">
+		delete toy_products
+		where product_no = #{value}
+	</delete>
+	
+	<select id="getProductDetail" parameterType="int" resultType="com.toymarket.vo.Products">
+		SELECT
+			product_no 					as no,
+			category_no 				as categoryNo,
+			product_brand 				as brand,
+			product_name 				as name,
+			product_price 				as price,
+			product_discount_rate 		as discountRate,
+			product_discount_YN 		as discountYN,
+			product_like_count 			as likeCount,
+			product_sell_unit 			as sellUnit,
+			product_weight 				as weight,
+			product_morning_delivery_YN as morningDeliveryYN,
+			product_description 		as description,
+			product_stock 				as stock,
+			product_created_date 		as createdDate,
+			product_status 				as status,
+			product_image 				as image,
+			product_sub_title 			as subTitle
+		FROM
+			toy_products
+		WHERE
+			product_no = #{value}
+	</select>
+	
+
+	<!-- 난수 검색 -->
+	<select id="getRandomProducts" resultType="com.toymarket.vo.Products">
+		SELECT 
+			product_no 					  as no
+			,category_no 				  as categoryNo
+			,product_brand 				  as brand
+			,product_name 				  as name
+			,product_price 				  as price
+			,product_discount_rate 		  as discountRate
+			,product_discount_YN 		  as discountYN
+			,product_like_count 		  as likeCount
+			,product_sell_unit 			  as sellUnit
+			,product_weight 			  as weight
+			,product_morning_delivery_YN  as morningDeliveryYN
+			,product_description 		  as description
+			,product_stock 				  as stock
+			,product_created_date 		  as createdDate
+			,product_status 			  as status
+			,product_image 				  as image
+			,product_sub_title 			  as subTitle
+		FROM 
+			(SELECT *
+        	FROM toy_products
+        	ORDER BY dbms_random.random)
+    	WHERE
+        	rownum 	&lt;= 12
+	</select>
+
+	<insert id="insertProduct" parameterType="com.toymarket.vo.Products">
+		insert into toy_products
+		(product_no, category_no, product_brand, product_name, product_price, 
+		 product_discount_rate, product_discount_yn, product_sell_unit, product_weight, 
+		 product_morning_delivery_yn, product_description, product_stock, product_status, 
+		 product_image, product_sub_title)
+		 values
+		 (products_seq.nextval, #{categoryNo}, #{brand}, #{name}, #{price}, #{discountRate}, #{discountYN}, #{sellUnit}, #{weight},
+		  #{morningDeliveryYN}, #{description}, #{stock}, #{status}, #{image}, #{subTitle} )
+	
+	</insert>
+	
+	<update id="updateProduct" parameterType="com.toymarket.vo.Products" >
+		update toy_products
+		set
+			product_image = #{image},
+			category_no = #{categoryNo},
+			product_name = #{name},
+			product_brand = #{brand},
+			product_price = #{price},
+			product_discount_rate = #{discountRate},
+			product_discount_yn = #{discountYN},
+			product_morning_delivery_yn = #{morningDeliveryYN},
+			product_stock = #{stock},
+			product_description = #{description},
+			product_sell_unit = #{sellUnit},
+			product_weight = #{weight},
+			product_status = #{status},
+			product_description = #{description},
+			product_sub_title = #{subTitle}
+		where
+			product_no = #{no}	
+	</update>
+	
+</mapper>

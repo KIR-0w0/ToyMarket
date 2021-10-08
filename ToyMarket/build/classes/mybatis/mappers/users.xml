@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="users">
+
+	<insert id="insertUser" parameterType="com.toymarket.vo.Customer">
+		insert into TOY_CUSTOMER
+		(customer_no, customer_id, customer_password, customer_name, customer_email, customer_phone,
+		 customer_postal_code, customer_address1, customer_address2, customer_gender, customer_birth)
+		values
+		(customer_seq.nextval, #{id}, #{password}, #{name}, #{email}, #{phone},
+		 #{postalCode}, #{address1}, #{address2}, #{gender}, #{birth})
+	</insert>
+	
+	<select id="getUserById" parameterType="string" resultType="com.toymarket.vo.Customer">
+		select
+			customer_no 			as no,
+			customer_id 			as id,
+			customer_password 		as password,
+			customer_name 			as name,
+			customer_email 			as email,
+			customer_phone 			as phone,
+			customer_postal_code 	as postalCode,
+			customer_address1 		as address1,
+			customer_address2 		as address2,
+			customer_gender 		as gender,
+			customer_point 			as point,
+			customer_birth 			as birth,
+			customer_status 		as status,
+			customer_created_date 	as createdDate,
+			customer_deleted_date 	as deletedDate
+		from TOY_CUSTOMER
+		where customer_id = #{value}
+	</select>
+	
+	<select id="getUserByEmail" parameterType="string" resultType="com.toymarket.vo.Customer">
+		select
+			customer_no 			as no,
+			customer_id 			as id,
+			customer_password 		as password,
+			customer_name 			as name,
+			customer_email 			as email,
+			customer_phone 			as phone,
+			customer_postal_code 	as postalCode,
+			customer_address1 		as address1,
+			customer_address2 		as address2,
+			customer_gender 		as gender,
+			customer_point 			as point,
+			customer_birth 			as birth,
+			customer_status 		as status,
+			customer_created_date 	as createdDate,
+			customer_deleted_date 	as deletedDate
+		from TOY_CUSTOMER
+		where customer_email = #{value}
+	</select>
+	
+	<select id="getUserByPhone" parameterType="string" resultType="com.toymarket.vo.Customer">
+		select
+			customer_no 			as no,
+			customer_id 			as id,
+			customer_password 		as password,
+			customer_name 			as name,
+			customer_email 			as email,
+			customer_phone 			as phone,
+			customer_postal_code 	as postalCode,
+			customer_address1 		as address1,
+			customer_address2 		as address2,
+			customer_gender 		as gender,
+			customer_point 			as point,
+			customer_birth 			as birth,
+			customer_status 		as status,
+			customer_created_date 	as createdDate,
+			customer_deleted_date 	as deletedDate
+		from TOY_CUSTOMER
+		where customer_phone = #{value}
+	</select>
+	
+	<update id="updateUserInfo" parameterType="com.toymarket.vo.Customer">
+		update
+			TOY_CUSTOMER
+		set	
+			customer_password 		= #{password},
+			customer_name 			= #{name},
+			customer_email 			= #{email},
+			customer_phone 			= #{phone}
+		where customer_id = #{id}
+	</update>
+	
+	<update id="deleteUserInfo" parameterType="String">
+		update 
+			TOY_CUSTOMER
+		set
+			customer_status = 'Y',
+			customer_deleted_date = SYSDATE
+		where customer_id = #{id}	
+	</update>
+</mapper>
+
+
+
+
+

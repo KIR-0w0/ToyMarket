@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="customers">
+
+   
+   <!-- 이동규 -->
+   <!-- 고객번호로 고객정보 찾기 -->
+   <select id="getCustomerByNo" parameterType="int" resultType="com.toymarket.vo.Customer">
+      select
+         customer_no            as no,
+         customer_id            as id,
+         customer_password      as password,
+         customer_name         as name,
+         customer_email         as email,
+         customer_phone         as phone,
+         customer_postal_code   as postalCode,
+         customer_address1      as address1,
+         customer_address2      as address2,
+         customer_gender         as gender,
+         customer_point         as point,
+         customer_birth         as birth,
+         customer_status         as status,
+         customer_created_date   as createdDate,
+         customer_deleted_date   as deletedDate
+      from
+         toy_customer
+      where
+         customer_no = #{value}
+   </select>
+   
+   <!-- 고객이름으로 고객정보 찾기 -->
+   <select id="getCustomerByName" parameterType="string" resultType="com.toymarket.vo.Customer">
+      select
+         customer_no            as no,
+         customer_id            as id,
+         customer_password      as password,
+         customer_name         as name,
+         customer_email         as email,
+         customer_phone         as phone,
+         customer_postal_code   as postalCode,
+         customer_address1      as address1,
+         customer_address2      as address2,
+         customer_gender         as gender,
+         customer_point         as point,
+         customer_birth         as birth,
+         customer_status         as status,
+         customer_created_date   as createdDate,
+         customer_deleted_date   as deletedDate
+      from
+         toy_customer
+      where
+         customer_name = #{value}
+   </select>
+   
+   <!-- 모든 고객정보찾기, map(검색조건)에 해당하는 고객정보찾기 -->
+   <select id="getCustomers" parameterType="map" resultType="com.toymarket.vo.Customer">
+      select
+         customer_no            as no,
+         customer_id            as id,
+         customer_password      as password,
+         customer_name         as name,
+         customer_email         as email,
+         customer_phone         as phone,
+         customer_postal_code   as postalCode,
+         customer_address1      as address1,
+         customer_address2      as address2,
+         customer_gender         as gender,
+         customer_point         as point,
+         customer_birth         as birth,
+         customer_status         as status,
+         customer_created_date   as createdDate,
+         customer_deleted_date   as deletedDate
+      from (
+         select 
+            row_number() over (order by customer_no desc) rn,
+            customer_no, customer_id, customer_password, customer_name, customer_email, customer_phone, 
+            customer_postal_code, customer_address1, customer_address2, customer_gender, 
+            customer_point, customer_birth, customer_status, customer_created_date, customer_deleted_date
+         from
+            toy_customer
+         where 
+            customer_status = 'N'
+            
+            <if test="name != null">
+               and customer_name like '%' || #{name} || '%'
+            </if>
+            <if test="id != null">
+               and customer_id like '%' || #{id} || '%'
+            </if>
+            <if test="gender != null and gender == '남자'">
+               and customer_gender = '남자'
+            </if>
+            <if test="gender != null and gender == 'men'">
+               and customer_gender = '남자'
+            </if>
+            <if test="gender != null and gender == '여자'">
+               and customer_gender = '여자'
+            </if>
+            <if test="gender != null and gender == 'women'">
+               and customer_gender = '여자'
+            </if>
+            <if test="fage != 0 and sage != 0">
+               and substr(customer_birth, 1, 4) between #{sage} and #{fage}
+            </if>
+      )
+      where
+         rn between #{beginIndex} and #{endIndex}
+   </select>
+   
+   <!-- 페이징처리를 위한 행 총갯수 -->
+   <select id="cGetTotalRows" parameterType="map" resultType="int">
+      select
+         count(*)
+      from
+         toy_customer
+      where
+         customer_status = 'N'
+         <if test="name != null">
+            and customer_name like '%' || #{name} || '%'
+         </if>
+         <if test="id != null">
+            and customer_id like '%' || #{id} || '%'
+         </if>
+         <if test="gender != null and gender == '남자'">
+            and customer_gender = '남자'
+         </if>
+         <if test="gender != null and gender == 'men'">
+            and customer_gender = '남자'
+         </if>
+         <if test="gender != null and gender == '여자'">
+            and customer_gender = '여자'
+         </if>
+         <if test="gender != null and gender == 'women'">
+            and customer_gender = '여자'
+         </if>
+         <if test="fage != 0 and sage != 0">
+            and substr(customer_birth, 1, 4) between #{sage} and #{fage}
+         </if>
+   </select>
+   
+   <!-- 고객번호로 주문내역 찾기 -->
+   <select id="getOrdersByCustomerNo" parameterType="int" resultType="com.toymarket.dto.order.CustomerOrderDto">
+      select O.customer_no     as customerNo,
+           O.order_no           as orderNo,
+           i.order_item_no      as orderItemNo,
+           P.product_no         as productNo,
+           p.product_brand      as brand,
+           P.product_name       as name,
+           i.price_price        as price,
+           o.total_order_price  as totalPrice,
+           o.total_order_amount as totalAmount,
+           o.order_status       as status,
+           o.order_created_date as createdDate
+
+      from toy_order O, toy_order_items I, toy_products P
+      where O.customer_no = #{value}
+      and O.order_no = I.order_no
+      and I.product_no = P.product_no
+      order by O.order_no desc
+   </select>
+   
+   <!-- 고객정보를 업데이트 -->
+   <update id="updateCustomer" parameterType="com.toymarket.vo.Customer">
+      update
+         toy_customer
+      set
+         customer_no = #{no},
+         customer_id   = #{id},
+         customer_password = #{password},
+         customer_name = #{name},
+         customer_email = #{email},
+         customer_phone = #{phone},
+         customer_postal_code = #{postalCode},
+         customer_address1 = #{address1},
+         customer_address2 = #{address2},
+         customer_gender = #{gender},
+         customer_point = #{point},
+         customer_birth = #{birth},
+         customer_status = #{status},
+         customer_created_date = #{createdDate},
+         customer_deleted_date = #{deletedDate}
+      where
+         customer_no = #{no}
+   </update>
+   
+   <!-- 탈퇴한 모든고객 고객정보 -->
+   <select id="getExpiredCustomers" parameterType="map" resultType="com.toymarket.vo.Customer">
+      select
+         customer_no            as no,
+         customer_id            as id,
+         customer_password      as password,
+         customer_name         as name,
+         customer_email         as email,
+         customer_phone         as phone,
+         customer_postal_code   as postalCode,
+         customer_address1      as address1,
+         customer_address2      as address2,
+         customer_gender         as gender,
+         customer_point         as point,
+         customer_birth         as birth,
+         customer_status         as status,
+         customer_created_date   as createdDate,
+         customer_deleted_date   as deletedDate
+      from (
+         select 
+            row_number() over (order by customer_no desc) rn,
+            customer_no, customer_id, customer_password, customer_name, customer_email, customer_phone, 
+            customer_postal_code, customer_address1, customer_address2, customer_gender, 
+            customer_point, customer_birth, customer_status, customer_created_date, customer_deleted_date
+         from
+            toy_customer
+         where 
+            customer_status = 'Y'
+      )
+      where
+         rn between #{beginIndex} and #{endIndex}
+   </select>
+   
+   <!-- 페이징처리를 위한 탈퇴한 고객 행 총갯수 -->
+   <select id="dGetTotalRows" parameterType="map" resultType="int">
+      select
+         count(*)
+      from
+         toy_customer
+      where
+         customer_status = 'Y'
+   </select>
+   
+   <!-- 당일 회원가입한 고객 고객정보 -->
+   <select id="getStatusNCustomers" resultType="com.toymarket.vo.Customer">
+      select
+         customer_no            as no,
+         customer_id            as id,
+         customer_password      as password,
+         customer_name         as name,
+         customer_email         as email,
+         customer_phone         as phone,
+         customer_postal_code   as postalCode,
+         customer_address1      as address1,
+         customer_address2      as address2,
+         customer_gender         as gender,
+         customer_point         as point,
+         customer_birth         as birth,
+         customer_status         as status,
+         customer_created_date   as createdDate,
+         customer_deleted_date   as deletedDate
+      from (
+         select 
+            row_number() over (order by customer_created_date desc) rn,
+            customer_no, customer_id, customer_password, customer_name, customer_email, customer_phone, 
+            customer_postal_code, customer_address1, customer_address2, customer_gender, 
+            customer_point, customer_birth, customer_status, customer_created_date, customer_deleted_date
+         from
+            toy_customer
+         where 
+            customer_status = 'N'
+            and to_char(sysdate, 'yyyy-mm-dd') = to_char(customer_created_date, 'yyyy-mm-dd')
+            
+      )
+      where
+         rn between 1 and 5
+   </select>
+   
+   <!-- 당일 회원가입한 인원수 -->
+   <select id="getStatusNTotalRows" resultType="int">
+      select
+         count(*)
+      from
+         toy_customer
+      where
+         customer_status = 'N'
+         and to_char(sysdate, 'yyyy-mm-dd') = to_char(customer_created_date, 'yyyy-mm-dd')
+   </select>
+   
+   <!-- 당일 탈퇴한 고객 고객정보 -->
+   <select id="getStatusYCustomers" resultType="com.toymarket.vo.Customer">
+      select
+         customer_no            as no,
+         customer_id            as id,
+         customer_password      as password,
+         customer_name         as name,
+         customer_email         as email,
+         customer_phone         as phone,
+         customer_postal_code   as postalCode,
+         customer_address1      as address1,
+         customer_address2      as address2,
+         customer_gender         as gender,
+         customer_point         as point,
+         customer_birth         as birth,
+         customer_status         as status,
+         customer_created_date   as createdDate,
+         customer_deleted_date   as deletedDate
+      from (
+         select 
+            row_number() over (order by customer_created_date desc) rn,
+            customer_no, customer_id, customer_password, customer_name, customer_email, customer_phone, 
+            customer_postal_code, customer_address1, customer_address2, customer_gender, 
+            customer_point, customer_birth, customer_status, customer_created_date, customer_deleted_date
+         from
+            toy_customer
+         where 
+            customer_status = 'Y'
+            and to_char(sysdate, 'yyyy-mm-dd') = to_char(customer_deleted_date, 'yyyy-mm-dd')
+            
+      )
+      where
+         rn between 1 and 5
+   </select>
+   
+   <!-- 당일 탈퇴한 고객수 -->
+   <select id="getStatusYTotalRows" resultType="int">
+      select
+         count(*)
+      from
+         toy_customer
+      where
+         customer_status = 'Y'
+         and to_char(sysdate, 'yyyy-mm-dd') = to_char(customer_deleted_date, 'yyyy-mm-dd')
+   </select>
+   
+   
+   
+   <!-- ////////////////////////////////////////////////////////////////////////////////////////// -->
+   <!-- 태원님 -->
+
+
+
+   <insert id="insertCustomer" parameterType="com.toymarket.vo.Customer">
+   insert into TOY_CUSTOMER
+   (customer_no, customer_id, customer_password, customer_name, customer_email, customer_phone,
+    customer_postal_code, customer_address1, customer_address2, customer_gender, customer_birth)
+   values
+   (customer_seq.nextval, #{id}, #{password}, #{name}, #{email}, #{phone},
+    #{postalCode}, #{address1}, #{address2}, #{gender}, #{birth})
+   </insert>
+   
+   <select id="getCustomerById" parameterType="string" resultType="com.toymarket.vo.Customer">
+      select
+         customer_no          as no,
+         customer_id          as id,
+         customer_password       as password,
+         customer_name          as name,
+         customer_email          as email,
+         customer_phone          as phone,
+         customer_postal_code    as postalCode,
+         customer_address1       as address1,
+         customer_address2       as address2,
+         customer_gender       as gender,
+         customer_point          as point,
+         customer_birth          as birth,
+         customer_status       as status,
+         customer_created_date    as createdDate,
+         customer_deleted_date    as deletedDate
+      from TOY_CUSTOMER
+      where customer_id = #{value}
+   </select>
+   
+   <select id="getCustomerByEmail" parameterType="string" resultType="com.toymarket.vo.Customer">
+      select
+         customer_no          as no,
+         customer_id          as id,
+         customer_password       as password,
+         customer_name          as name,
+         customer_email          as email,
+         customer_phone          as phone,
+         customer_postal_code    as postalCode,
+         customer_address1       as address1,
+         customer_address2       as address2,
+         customer_gender       as gender,
+         customer_point          as point,
+         customer_birth          as birth,
+         customer_status       as status,
+         customer_created_date    as createdDate,
+         customer_deleted_date    as deletedDate
+      from TOY_CUSTOMER
+      where customer_email = #{value}
+   </select>
+   
+   <select id="getCustomerByPhone" parameterType="string" resultType="com.toymarket.vo.Customer">
+      select
+         customer_no          as no,
+         customer_id          as id,
+         customer_password       as password,
+         customer_name          as name,
+         customer_email          as email,
+         customer_phone          as phone,
+         customer_postal_code    as postalCode,
+         customer_address1       as address1,
+         customer_address2       as address2,
+         customer_gender       as gender,
+         customer_point          as point,
+         customer_birth          as birth,
+         customer_status       as status,
+         customer_created_date    as createdDate,
+         customer_deleted_date    as deletedDate
+      from TOY_CUSTOMER
+      where customer_phone = #{value}
+   </select>
+   
+   <update id="updateCustomerInfo" parameterType="com.toymarket.vo.Customer">
+      update
+         toy_customer
+      set
+         customer_id   = #{id},
+         customer_password = #{password},
+         customer_name = #{name},
+         customer_email = #{email},
+         customer_phone = #{phone},
+         customer_postal_code = #{postalCode},
+         customer_address1 = #{address1},
+         customer_address2 = #{address2}
+      where
+         customer_id = #{id}
+   </update>
+   
+   <update id="deleteCustomer" parameterType="String">
+      update 
+         TOY_CUSTOMER
+      set
+         customer_status = 'Y',
+         customer_deleted_date = SYSDATE
+      where customer_id = #{id}   
+   </update>
+
+</mapper>

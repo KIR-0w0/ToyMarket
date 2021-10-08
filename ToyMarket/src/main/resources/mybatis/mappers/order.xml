@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="order">
+
+	<select id="getOrderByCustomerNo" parameterType="int" resultType="com.toymarket.vo.order.Order">
+		select order_no 			as orderNo,
+				total_order_price 	as orderPrice,
+				total_order_amount	as totalAmount,
+				total_used_point 	as usedPoint,
+				total_pay_price 	as totalPrice,
+				total_deposit_point as depositePoint,
+				order_status 		as status,
+				order_created_date	as createdDate,
+				customer_no 		as customerNo,
+				order_address1 		as address1,
+				order_address2 		as address2	
+		from toy_order
+		where customer_no = #{value}
+	</select>
+
+	<select id="getOrderItemByCustomerNo" parameterType="int" resultType="com.toymarket.vo.order.OrderItems">
+		select  order_item_no 		as itemNo,
+				order_no 			as orderNo,
+				product_no  		as productNo,
+				price_price 		as price,
+				order_amount 		as amount,
+				order_price 		as orderPrice
+		from toy_order_items
+		where order_no = #{value}
+	</select>
+	
+	<insert id="insertOrder" parameterType="com.toymarket.vo.order.Order">
+		insert into toy_order
+		(order_no, total_order_price, total_order_amount, total_used_point, total_pay_price,
+		total_deposit_point, order_status, order_created_date, customer_no, order_address1, order_address2)
+		values
+		(order_seq.nextval, #{orderPrice}, #{totalAmount}, #{usedPoint}, #{totalPrice} , #{depositePoint},
+		#{status},#{createdDate},(select customer_no from toy_customer where customer_id = #{customerNo}),#{address1},#{address2})
+		<selectKey resultType="Integer" keyProperty="orderNo" order="AFTER">
+			select order_seq.currval from dual		
+		</selectKey>
+	</insert>
+	
+	<insert id="insertOrderItem" parameterType="com.toymarket.dto.order.OrderItemDto">
+		insert into toy_order_items
+		(order_item_no, order_no, product_no, order_amount, order_price)
+		select order_items_seq.nextval, #{orderNo},product_no,product_amount,product_buy_price from toy_cart where cart_no=#{cartNo}
+	</insert>
+	
+	<select id="getOrderList" parameterType="string" resultType="com.toymarket.dto.order.OrderListDto">
+	    select 
+	    CUSTOMER_ADDRESS1 as address1,
+	    CUSTOMER_ADDRESS2 as address2, 
+	    CUSTOMER_POINT as userPoint
+	    from toy_customer
+	    where customer_id = #{userId}
+	</select>
+	
+	<update id="updatePoint" parameterType="com.toymarket.dto.order.PointUpdateDto">
+		update toy_customer
+		set
+			customer_point = customer_point + #{point}
+		where
+			customer_id = #{userId}
+	</update>
+	
+	<select id="getItemDataByItemNo" parameterType="string" resultType="com.toymarket.dto.cart.CartItemDto">
+	select  cart_no as itemNo,
+        	(select product_name from toy_products where product_no = toy_cart.product_no)  as itemName,
+        	(product_amount * product_buy_price) 		as price,
+        	(select product_Image from toy_products where product_no = toy_cart.product_no) as itemImage
+			from toy_cart
+		where cart_no= #{itemNo}
+	</select>
+	
+</mapper>

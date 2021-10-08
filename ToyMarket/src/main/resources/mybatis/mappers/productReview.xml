@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="productReview">
+
+	<select id="getTotalRows" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*)
+		FROM 
+			toy_product_reviews R, toy_order_items I
+		WHERE
+			R.order_item_no = I.order_item_no
+		AND
+			I.product_no = #{productNo}
+	</select>
+	
+	<select id="checkOrderItemNo" parameterType="map" resultType="com.toymarket.vo.order.OrderItems">
+		SELECT
+			DISTINCT order_item_no 			as itemNo,
+			order_no 						as orderNo,
+			product_no 						as productNo,
+			price_price 					as price,
+			order_amount 					as amount,
+			order_price 					as orderPrice
+		FROM
+			toy_order_items 
+		WHERE
+			product_no = #{productNo}
+		AND
+			order_no IN (SELECT O.order_no FROM toy_order O, toy_customer C WHERE O.customer_no = #{customerNo})
+	</select>
+	
+	<select id="getReviewList" parameterType="map" resultType="com.toymarket.dto.ProductReviewDto">
+		SELECT
+			review_no 							as no,
+			review_title						as title,
+			review_content 						as content,
+			review_created_date 				as createdDate,
+			order_item_no 						as itemNo,
+			review_view 						as views,
+			product_no 							as productNo,
+			order_no 							as orderNo,
+			customer_no 						as customerNo,
+			customer_name 						as customerName,
+			RN
+		FROM (
+			SELECT
+				<if test="sort == '최근등록순'"> row_number() OVER (ORDER BY review_no DESC) RN, </if>
+				<if test="sort == '조회많은순'"> row_number() OVER (ORDER BY review_view DESC) RN, </if>
+				R.review_no, R.review_title, R.review_content, R.review_created_date, R.order_item_no, R.review_view, I.product_no,
+				I.order_no, O.customer_no, C.customer_name
+			FROM 
+				toy_product_reviews R, toy_order_items I, toy_order O, toy_customer C
+			WHERE
+				R.order_item_no = I.order_item_no
+			AND
+				I.order_no = O.order_no
+			AND
+				O.customer_no = C.customer_no
+			AND
+				I.product_no = #{productNo}
+		)
+		WHERE
+			RN BETWEEN #{beginIndex} AND #{endIndex}
+	</select>
+	
+	<select id="getReviewByReviewNo" parameterType="int" resultType="com.toymarket.vo.ProductReview">
+		SELECT 
+			review_no 							as no,
+			review_title						as title,
+			review_content 						as content,
+			review_created_date 				as createdDate,
+			order_item_no 						as itemNo,
+			review_view 						as views
+		FROM
+			toy_product_reviews
+		WHERE
+			review_no = #{value}
+	</select>
+
+	<insert id="insertReview" parameterType="com.toymarket.vo.ProductReview">
+		INSERT INTO toy_product_reviews(
+			review_no, review_title, review_content, review_created_date, order_item_no
+		)
+		VALUES (
+			product_reviews_seq.nextval, #{title}, #{content}, SYSDATE, #{itemNo}
+		)
+	</insert>
+	
+	<update id="updateReviewView" parameterType="com.toymarket.vo.ProductReview">
+		UPDATE 
+			toy_product_reviews
+		SET
+			review_view = #{views}
+		WHERE
+			review_no = #{no}
+			
+	</update>
+	
+</mapper>

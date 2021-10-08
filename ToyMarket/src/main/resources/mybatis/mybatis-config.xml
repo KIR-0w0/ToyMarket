@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+  
+<configuration>
+	
+	<!--
+		Mybatis 실행시 동작을 셋팅한다. 
+	-->
+	<settings>
+		<!-- 
+			jdbcTypeForNull
+				- INSERT, UPDATE 실행시 컬럼에 null값이 입력 가능케 한다
+				- 단, not null 제약조건이 지정된 컬럼에 null값이 입력되는 경우에는 예외가 발생한다.
+		-->
+		<setting name="jdbcTypeForNull" value="NULL" />
+		<!-- 
+			logImpl
+				- Mybatis가 사용할 로깅 구현체를 지정한다.
+				- 현재 설정은 log4j라는 로깅 라이브러리를 기본 로깅 구현체로 지정
+		-->
+		<setting name="logImpl" value="STDOUT_LOGGING" />
+	</settings>
+	
+	<!--
+		SQL 매핑구문 작성할 때, parameterType과 resultType에 지정하는 클래스에 대한 별칭을 지정한다.
+			- 별칭 설정 전
+				<insert id="insertProduct" parameterType="com.sample.vo.Product">
+					INSERT INTO sample_products(product_no, product_name, product_maker, ...)
+					VALUES (product_seq.nextval, #{name}, #{maker}, ...)
+				</insert>
+				 
+			- 별칭 설정 후
+				<insert id="insertProduct" parameterType="Product">
+					INSERT INTO sample_products(product_no, product_name, product_maker, ...)
+					VALUES (product_seq.nextval, #{name}, #{maker}, ...)
+				</insert> 
+	-->
+	<typeAliases>
+		<!--
+			자바클래스에 대한 별칭을 클래스별로 설정하기. 
+			 
+			<typeAlias type="com.sample.vo.Product" alias="Product"/>
+			<typeAlias type="com.sample.vo.User" alias="User"/>
+			<typeAlias type="com.sample.vo.Item" alias="Item"/>
+		 -->
+		 
+		 <!--
+		 	자바클래스에 대한 별칭을 해당 패키지안에 있는 모든 클래스에 대해서 설정하기
+		 	com.sample.vo.Product의 별칭은 product가 된다.	 
+		 	com.sample.vo.User의 별칭은 user가 된다.	 
+		 	com.sample.vo.Item의 별칭은 item이 된다.	 
+		 	com.sample.vo.UserOrderHistory의 별칭은 UserOrderHistory이 된다.	 
+		 -->
+		 <package name="com.toymarket.vo."/>
+	</typeAliases>
+	
+	<!-- 데이터베이스 연결정보 설정 -->
+	<environments default="development">
+		<environment id="development">
+			<transactionManager type="JDBC" />
+			<dataSource type="POOLED">
+				<property name="driver" value="oracle.jdbc.OracleDriver" />
+<!-- 				<property name="url" value="jdbc:oracle:thin:@localhost:1521:xe" /> -->
+<!-- 				<property name="username" value="ToyMarket" /> -->
+<!-- 				<property name="password" value="zxcv1234" /> -->
+				<property name="url" value="jdbc:oracle:thin:@eunpjt.c7peghziuv0s.ap-northeast-2.rds.amazonaws.com:1521:ORCL" />
+				<property name="username" value="eunpjt" />
+				<property name="password" value="12345678" />
+			</dataSource>
+		</environment>
+	</environments>
+	<!-- 사용자정의 매퍼파일 등록 -->
+	<mappers>
+		<mapper resource="mybatis/mappers/boards.xml"/>
+		<mapper resource="mybatis/mappers/category.xml"/>
+    	<mapper resource="mybatis/mappers/cart.xml"/>
+    	<mapper resource="mybatis/mappers/customers.xml"/>
+    	<mapper resource="mybatis/mappers/order.xml"/>
+		<mapper resource="mybatis/mappers/products.xml"/>
+		<mapper resource="mybatis/mappers/productInquiry.xml"/>
+		<mapper resource="mybatis/mappers/productReview.xml"/>
+		<mapper resource="mybatis/mappers/products.xml"/>
+		<mapper resource="mybatis/mappers/users.xml"/>
+	</mappers>
+</configuration>
